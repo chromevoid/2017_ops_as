@@ -1,0 +1,21 @@
+// Print the total number of votes across all moves.
+BEGIN { FS = "|"; sum = 0 } { sum += $5 } END { print sum }
+
+// Print the year that had the greatest number of total votes.
+BEGIN { FS = "|" } { year[$3] += $5 } END { max_vote = 0; max_year = 0; for (v in year) { if (max_vote < year[v]) { max_vote = year[v]; max_year = v } } print max_year }
+
+// Print the decade that had the greatest number of top 250 movies.
+BEGIN { FS = "|" } { year[int($3/10)]++ } END { max = 0; max_year = 0; for (v in year) { if (max < year[v]) { max = year[v]; max_year = v } } print max_year*10 }
+
+// Print the average number of votes for movies above an 8.5 rating and the average number of votes for movies below an 8.5 rating on a single line.
+BEGIN { FS = "|"; voteAbove = 0; movieAbove = 0; voteBelow = 0; movieBelow = 0 } { if ($4 >= 8.5) { voteAbove += $5; movieAbove++ } else { voteBelow += $5; movieBelow++ } } END { avrAbove = voteAbove / movieAbove; avrBelow = voteBelow / movieBelow; print avrAbove " " avrBelow}
+
+// Print the average number of words in each title.  A word is any string of non-whitespace characters.  The answer should be a floating point number, e.g. 3.4
+// e.g. "1|The Shawshank Redemption|1994|9.2|1778706" is sperated by " ", and it's NF is 3 = the words in the title
+BEGIN { sum = 0 } { sum += NF } END { avr = sum / 250; print avr }
+
+// Print the most commonly used word in titles besides "The", "the", and "of".
+BEGIN { FS="[^a-zA-Z]+" } { for (i=1; i<=NF; i++) { word = $i; words[word]++ } } END { max = 0; for (w in words) { if (words[w] > max) { if (w ~ /[a-zA-Z]+/ && w != "The" && w != "the" && w != "of") { max = words[w]; word = w } } } print word }
+
+// Print the movies with the longest and shortest titles on two lines.
+BEGIN { FS = "|"; max = 0; min = 100} { if (length($2) > max) { max = length($2); max_name = $2 } if (length($2) < min) { min = length($2); min_name = $2 } } END { print max_name; print min_name }
