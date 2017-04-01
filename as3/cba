@@ -1,0 +1,58 @@
+#!/bin/sh
+
+# check input
+if [ "$#" -lt 1 ]
+then
+  hasfile=false
+  # run gunzip and expand the archive with pax
+  gunzip < /dev/stdin | pax -r
+else
+  hasfile=true
+  file="$1"
+  if [ -f "$file" ]
+  then
+    if [ "$(echo "$file" | rev | cut -d "." -f 1 | rev)" != "abc" ]
+    then
+      echo "Invalid filename"
+      exit 1
+    fi
+    # run gunzip
+    filename=$(echo "$file" | rev | cut -d "." -f 2- | rev)
+    mv "$file" "$filename.gz"
+	gunzip < "$filename.gz" > "abc$filename"
+	# expand the archive with pax
+	pax -r < "abc$filename"
+	rm "abc$filename"
+	rm "$filename.gz"
+  else
+  	echo "No such file"
+  	exit 1
+  fi
+fi
+
+# read the delimiter from the file
+cd "./tmpjy"
+read delimiter < d
+# use paste to put the columns back together
+filenumber=$(ls | wc -l)
+filestring=""
+i=1
+while [ $i -lt $filenumber ]
+do
+  filestring="$filestring $i"
+  i=$(expr $i + 1)
+done
+if $hasfile
+then
+  if [ -f "../$filename" ]
+  then
+    paste -d "$delimiter" $filestring > "../$filename.cba"
+  else
+    paste -d "$delimiter" $filestring > "../$filename"
+  fi
+else
+  paste -d "$delimiter" $filestring
+fi
+cd ..
+rm -r "./tmpjy"
+exit 0

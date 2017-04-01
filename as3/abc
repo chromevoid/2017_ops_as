@@ -1,0 +1,80 @@
+#!/bin/sh
+
+# create a tmpjy directory
+if !(mkdir "./tmpjy" 2> /dev/null)
+then
+  echo "Please remove your tmpjy directory"
+  exit 1
+fi
+
+# check input
+if [ "$#" -lt 1 ]
+then
+  echo "Missing delimiter"
+  rm -r "./tmpjy"
+  exit 1
+elif [ "$#" -lt 2 ]
+then
+  touch "./tmpjy/filename"
+  while read line
+  do
+    echo "$line" >> "./tmpjy/filename"
+  done
+  file="./tmpjy/filename"
+elif [ -f "$2" ]
+then
+  file="$2"
+elif [ "$#" -gt 2 ]
+then
+  echo "Too many arguments"
+  rm -r "./tmpjy"
+  exit 1
+fi
+
+column=0
+if [ -f "$file" ]
+then
+  # determine the number of columns
+  column=`awk "BEGIN { FS = \"$1\" } { min = NR == 1 ? NF : min; min = NF < min ? NF : min } END { print min }" "$file"`
+  # turn each column into a separate file in a tmpjy$t directory
+  i=1
+  while [[ "$i" -lt "$column" ]]
+  do
+  	cut -d "$1" -f "$i" < "$file" > "./tmpjy/$i"
+  	i=$(expr $i + 1)
+  done
+  cut -d "$1" -f "$i-" < "$file" > "./tmpjy/$i"
+  # create an additional file to save the delimiter
+  echo "$1" > "./tmpjy/d"
+  # encode the individual files into a single file
+  j=1
+  files="./tmpjy/d"
+  while [ "$j" -le "$i" ]
+  do
+  	files="$files ./tmpjy/$j"
+  	j=$(expr $j + 1)
+  done
+  if [ "$file" = "./tmpjy/filename" ]
+  then
+    pax -w $files > "abcfilename"
+  else
+  	pax -w $files > "./tmpjy/abc$file"
+  fi
+  # run gzip on the archive and create .abc file
+  if [ "$file" = "./tmpjy/filename" ]
+  then
+    rm -r "./tmpjy"
+    gzip < "abcfilename"
+    rm "abcfilename"
+    exit 0
+  else
+  	gzip < "./tmpjy/abc$file" > "$file.abc"
+  	# remove the tmpjy directory
+    rm -r "./tmpjy"
+    exit 0
+  fi
+else
+  echo "No such file"
+  rm -r "./tmpjy"
+  exit 1
+fi
