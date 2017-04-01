@@ -1,0 +1,58 @@
+#!/bin/sh
+
+export PATH=$PATH:.
+
+# check input
+if [ -f "$1" ]
+then
+  continue
+else
+  echo "Invalid file"
+  exit 1
+fi
+
+# find the original delimiter
+list=", | : ; #"
+d=""
+for i in $list
+do
+  if [ $(grep $i < "$1" | wc -l) -gt 0 ]
+  then
+    d=$i
+    break
+  fi
+done
+if [ $d = "" ]
+then
+  echo "$1 doesn't have a delimiter"
+  exit 1
+fi
+
+# find best delimiter
+min=$(tr $d ',' < "$1" | abc ',' | wc -c)
+# echo ",$min"
+method="abc ',' $1"
+list="| : ; #"
+for i in $list
+do
+  cur=$(tr $d $i < "$1" | abc $i | wc -c)
+  # echo "$i$cur"
+  if [ $min -gt $cur ]
+  then
+    min=$cur
+    method="abc '$i' $1"
+  fi
+done
+
+# compare the best delimiter with gzip
+gzipwc=$(gzip < "$1" | wc -c)
+if [ $min -gt $gzipwc ]
+then
+  min=$gzipwc
+  method="gzip $1"
+fi
+
+# echo result
+echo "$method"
+
+exit 0
