@@ -11,14 +11,32 @@ else
   exit 1
 fi
 
-min=$(cat "$1" | wc -c)
-method=""
-
-# find the best delimiter
+# find the original delimiter
 list=", | : ; #"
+d=""
 for i in $list
 do
-  cur=$(abc $i < "$1" | wc -c)
+  if [ $(grep $i < "$1" | wc -l) -gt 0 ]
+  then
+    d=$i
+    break
+  fi
+done
+if [ $d = "" ]
+then
+  echo "$1 doesn't have a delimiter"
+  exit 1
+fi
+
+# find best delimiter
+min=$(tr $d ',' < "$1" | abc ',' | wc -c)
+# echo ",$min"
+method="abc ',' $1"
+list="| : ; #"
+for i in $list
+do
+  cur=$(tr $d $i < "$1" | abc $i | wc -c)
+  # echo "$i$cur"
   if [ $min -gt $cur ]
   then
     min=$cur
