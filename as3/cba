@@ -1,5 +1,7 @@
 #!/bin/sh
 
+trap "rm -r ./tmpjy 2> /dev/null" EXIT
+
 # check input
 if [ "$#" -lt 1 ]
 then

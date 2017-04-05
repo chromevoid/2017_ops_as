@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export PATH=$PATH:.
+trap "rm -r ./tmpjy 2> /dev/null" EXIT
 
 # check input
 if [ -f "$1" ]
